@@ -2,69 +2,80 @@ package com.pratham.blackhole;
 
 import com.pratham.blackhole.physics.Particle;
 import com.pratham.blackhole.simulation.Simulation;
+import com.pratham.blackhole.math.Vector2D;
+
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Line;
 import javafx.stage.Stage;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class Main extends Application {
 
     private Simulation simulation;
-    private List<Circle> particleNodes;
 
     @Override
     public void start(Stage stage) {
-
         simulation = new Simulation();
-        System.out.println("Particle count: " + simulation.getParticles().size());
 
         Group root = new Group();
-
-        Circle blackHoleCircle = new Circle(400, 300, 20, Color.DARKGRAY);
-
-        root.getChildren().add(blackHoleCircle);
-
-        particleNodes = new ArrayList<>();
-
-        for (Particle particle : simulation.getParticles()) {
-
-            Circle circle = new Circle(4, Color.WHITE);
-
-            particleNodes.add(circle);
-
-            root.getChildren().add(circle);
-        }
-
         Scene scene = new Scene(root, 800, 600, Color.BLACK);
 
         stage.setTitle("Black Hole Simulation");
-
         stage.setScene(scene);
-
         stage.show();
 
         AnimationTimer timer = new AnimationTimer() {
-
             @Override
             public void handle(long now) {
 
+                // Update physics
                 simulation.update();
 
-                for (int i = 0; i < particleNodes.size(); i++) {
+                // Clear previous frame
+                root.getChildren().clear();
 
-                    Particle particle = simulation.getParticles().get(i);
+                // Draw black hole
+                Circle blackHole = new Circle(
+                        simulation.getBlackHole().getPosition().getX(),
+                        simulation.getBlackHole().getPosition().getY(),
+                        25
+                );
+                blackHole.setFill(Color.GRAY);
+                root.getChildren().add(blackHole);
 
-                    Circle circle = particleNodes.get(i);
+                // Draw particles + trails
+                for (Particle particle : simulation.getParticles()) {
 
-                    circle.setCenterX(particle.getPosition().getX());
+                    // Draw trail lines
+                    for (int i = 1; i < particle.getTrail().size(); i++) {
+                        Vector2D p1 = particle.getTrail().get(i - 1);
+                        Vector2D p2 = particle.getTrail().get(i);
 
-                    circle.setCenterY(particle.getPosition().getY());
+                        Line line = new Line(
+                                p1.getX(), p1.getY(),
+                                p2.getX(), p2.getY()
+                        );
+
+                        // Fade older segments
+                        double opacity = i / (double) particle.getTrail().size();
+                        line.setStroke(Color.CYAN);
+                        line.setOpacity(opacity * 0.6);
+
+                        root.getChildren().add(line);
+                    }
+
+                    // Draw particle
+                    Circle circle = new Circle(
+                            particle.getPosition().getX(),
+                            particle.getPosition().getY(),
+                            3
+                    );
+                    circle.setFill(Color.WHITE);
+                    root.getChildren().add(circle);
                 }
             }
         };
@@ -73,7 +84,6 @@ public class Main extends Application {
     }
 
     public static void main(String[] args) {
-
         launch();
     }
 }
