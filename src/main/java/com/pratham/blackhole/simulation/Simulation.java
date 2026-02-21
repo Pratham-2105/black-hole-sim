@@ -4,34 +4,49 @@ import com.pratham.blackhole.math.Vector2D;
 import com.pratham.blackhole.physics.BlackHole;
 import com.pratham.blackhole.physics.Particle;
 
+import java.util.ArrayList;
+import java.util.List;
 
 public class Simulation {
 
-    public void run() {
-        Particle particle = new Particle(
-                new Vector2D(100, 0),
-                new Vector2D(0, 2),
-                10
-        );
+    private List<Particle> particles;
+    private BlackHole blackHole;
 
-        BlackHole blackHole = new BlackHole(
-                new Vector2D(0, 0),
-                1000
-        );
+    public Simulation() {
+        particles = new ArrayList<>();
 
-        for (int i = 0; i < 100; i++) {
+        // Create multiple particles
+        for(int i = 0; i < 200; i++) {
+            Particle p = new Particle(
+                    new Vector2D(200 + i, 0),
+                    new Vector2D(0, 2),
+                    10
+            );
+
+            particles.add(p);
+        }
+
+        blackHole = new BlackHole(
+                new Vector2D(400, 300),
+                5000
+        );
+    }
+
+    public void update() {
+        for(Particle particle : particles) {
             Vector2D force = blackHole.calculateForce(particle);
 
             particle.applyForce(force);
 
             particle.update();
-
-            System.out.println(
-                    "Position: "
-                            + particle.getPosition().getX()
-                            + ", "
-                            + particle.getPosition().getY()
-            );
         }
+    }
+
+    public List<Particle> getParticles() {
+        return particles;
+    }
+
+    public BlackHole getBlackHole() {
+        return blackHole;
     }
 }
