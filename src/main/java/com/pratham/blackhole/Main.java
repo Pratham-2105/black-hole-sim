@@ -9,17 +9,25 @@ import javafx.application.Application;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.CycleMethod;
+import javafx.scene.paint.RadialGradient;
+import javafx.scene.paint.Stop;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.stage.Stage;
 
-import javafx.scene.paint.RadialGradient;
-import javafx.scene.paint.Stop;
-import javafx.scene.paint.CycleMethod;
+import java.util.*;
+
+import javafx.scene.shape.Polyline;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Main extends Application {
 
     private Simulation simulation;
+
+    private Map<Particle, Circle> particleCircles = new HashMap<>();
+    private Map<Particle, Polyline> particleTrails = new HashMap<>();
 
     @Override
     public void start(Stage stage) {
@@ -31,6 +39,28 @@ public class Main extends Application {
         stage.setTitle("Black Hole Simulation");
         stage.setScene(scene);
         stage.show();
+
+        double cx = simulation.getBlackHole().getPosition().getX();
+        double cy = simulation.getBlackHole().getPosition().getY();
+
+        // Orange Glow
+        Circle orangeGlow = new Circle(cx, cy, 80);
+        orangeGlow.setFill(new RadialGradient(
+                0, 0,
+                0.5, 0.5,
+                0.5,
+                true,
+                CycleMethod.NO_CYCLE,
+                new Stop(0, Color.rgb(255, 170, 90, 0.5)),
+                new Stop(0.4, Color.rgb(255, 120, 40, 0.25)),
+                new Stop(1, Color.TRANSPARENT)
+        ));
+        root.getChildren().add(orangeGlow);
+
+        // Core
+        Circle core = new Circle(cx, cy, 25);
+        core.setFill(Color.BLACK);
+        root.getChildren().add(core);
 
         AnimationTimer timer = new AnimationTimer() {
 
@@ -51,96 +81,46 @@ public class Main extends Application {
                 // Update physics with delta time
                 simulation.update(dt);
 
-                // Clear previous frame
-                root.getChildren().clear();
 
-                // Draw black hole
-
-                //Outer Blue Glow
-                Circle blueGlow = new Circle(
-                        simulation.getBlackHole().getPosition().getX(),
-                        simulation.getBlackHole().getPosition().getY(),
-                        80
-                );
-
-                RadialGradient blueGradient = new RadialGradient(
-                        0, 0,
-                        0.5, 0.5,
-                        0.5,
-                        true,
-                        CycleMethod.NO_CYCLE,
-                        new Stop(0, Color.rgb(30, 144, 255, 0.6)),   // bright center
-                        new Stop(1, Color.rgb(30, 144, 255, 0.0))    // transparent edge
-                );
-
-                blueGlow.setFill(blueGradient);
-                root.getChildren().add(blueGlow);
-
-
-                //Inner Orange Glow
-                Circle orangeGlow = new Circle(
-                        simulation.getBlackHole().getPosition().getX(),
-                        simulation.getBlackHole().getPosition().getY(),
-                        45
-                );
-
-                RadialGradient orangeGradient = new RadialGradient(
-                        0, 0,
-                        0.5, 0.5,
-                        0.5,
-                        true,
-                        CycleMethod.NO_CYCLE,
-                        new Stop(0, Color.rgb(255, 140, 0, 0.9)),  // hot center
-                        new Stop(1, Color.rgb(255, 69, 0, 0.0))    // fade outward
-                );
-
-                orangeGlow.setFill(orangeGradient);
-                root.getChildren().add(orangeGlow);
-
-
-                //Core Black Hole
-                Circle blackHoleCore = new Circle(
-                        simulation.getBlackHole().getPosition().getX(),
-                        simulation.getBlackHole().getPosition().getY(),
-                        25
-                );
-                blackHoleCore.setFill(Color.BLACK);
-                root.getChildren().add(blackHoleCore);
-
-                // Draw particles + trails
                 for (Particle particle : simulation.getParticles()) {
 
-                    for (int i = 1; i < particle.getTrail().size(); i++) {
-                        Vector2D p1 = particle.getTrail().get(i - 1);
-                        Vector2D p2 = particle.getTrail().get(i);
+                    // Create circle if missing
+                    if (!particleCircles.containsKey(particle)) {
+                        Circle circle = new Circle(3, Color.WHITE);
+                        particleCircles.put(particle, circle);
+                        root.getChildren().add(circle);
 
-                        Line line = new Line(
-                                p1.getX(), p1.getY(),
-                                p2.getX(), p2.getY()
-                        );
-
-                        double opacity = i / (double) particle.getTrail().size();
-                        line.setStroke(Color.CYAN);
-                        line.setOpacity(opacity * 0.6 * particle.getOpacity());
-
-                        root.getChildren().add(line);
+                        Polyline trail = new Polyline();
+                        trail.setStroke(Color.CYAN);
+                        trail.setOpacity(0.6);
+                        particleTrails.put(particle, trail);
+                        root.getChildren().add(trail);
                     }
 
-                    Circle circle = new Circle(
-                            particle.getPosition().getX(),
-                            particle.getPosition().getY(),
-                            3
-                    );
-                    circle.setFill(Color.WHITE);
+                    Circle circle = particleCircles.get(particle);
+                    circle.setCenterX(particle.getPosition().getX());
+                    circle.setCenterY(particle.getPosition().getY());
                     circle.setOpacity(particle.getOpacity());
 
-                    root.getChildren().add(circle);
+                    Polyline trail = particleTrails.get(particle);
+                    trail.getPoints().clear();
 
-                    double pulse = 1 + 0.05 * Math.sin(now * 0.000000002);
-                    orangeGlow.setRadius(45 * pulse);
+                    for (Vector2D pos : particle.getTrail()) {
+                        trail.getPoints().addAll(pos.getX(), pos.getY());
+                    }
+
+                    trail.setOpacity(0.6 * particle.getOpacity());
+                }
+
+                for (Particle p : new ArrayList<>(particleCircles.keySet())) {
+                    if (!simulation.getParticles().contains(p)) {
+                        root.getChildren().remove(particleCircles.get(p));
+                        root.getChildren().remove(particleTrails.get(p));
+                        particleCircles.remove(p);
+                        particleTrails.remove(p);
+                    }
                 }
             }
-
         };
 
         timer.start();
