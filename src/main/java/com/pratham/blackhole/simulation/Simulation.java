@@ -14,7 +14,7 @@ public class Simulation {
                 10
         );
 
-        BlackHole blachHole = new BlackHole(
+        BlackHole blackHole = new BlackHole(
                 new Vector2D(0, 0),
                 1000
         );
