@@ -18,8 +18,8 @@ public class Simulation {
         // Create multiple particles
         for(int i = 0; i < 200; i++) {
             Particle p = new Particle(
-                    new Vector2D(200 + i, 0),
-                    new Vector2D(0, 2),
+                    new Vector2D(400 + i, 300),
+                    new Vector2D(0, 1.5),
                     10
             );
 
