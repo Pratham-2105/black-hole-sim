@@ -13,6 +13,8 @@ public class Simulation {
     private List<Particle> particles;
     private BlackHole blackHole;
 
+    private static final int TARGET_PARTICLE_COUNT = 300;
+
     public Simulation() {
         particles = new ArrayList<>();
 
@@ -60,6 +62,32 @@ public class Simulation {
         }
     }
 
+    private void spawnParticle() {
+
+        double minRadius = 180;
+        double maxRadius = 260;
+
+        double angle = Math.random() * 2 * Math.PI;
+        double radius = minRadius + Math.random() * (maxRadius - minRadius);
+
+        double x = blackHole.getPosition().getX() + radius * Math.cos(angle);
+        double y = blackHole.getPosition().getY() + radius * Math.sin(angle);
+
+        Vector2D position = new Vector2D(x, y);
+
+        Vector2D radial = position.subtract(blackHole.getPosition());
+        double r = radial.magnitude();
+
+        Vector2D tangential = new Vector2D(-radial.getY(), radial.getX()).normalize();
+
+        double speed = Math.sqrt((BlackHole.getG() * blackHole.getMass()) / r);
+
+        Vector2D velocity = tangential.multiply(speed);
+
+        Particle particle = new Particle(position, velocity, 10);
+        particles.add(particle);
+    }
+
     public void update(double dt) {
 
         Iterator<Particle> iterator = particles.iterator();
@@ -88,6 +116,10 @@ public class Simulation {
                     iterator.remove();
                 }
             }
+        }
+
+        while (particles.size() < TARGET_PARTICLE_COUNT) {
+            spawnParticle();
         }
     }
 
