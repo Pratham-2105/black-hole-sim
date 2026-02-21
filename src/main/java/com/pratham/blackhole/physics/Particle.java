@@ -33,25 +33,26 @@ public class Particle {
     }
 
     // Update particle motion each timestep
-    public void update() {
+    public void update(double dt) {
 
-        // Apply acceleration
-        velocity = velocity.add(acceleration);
+        // Scale simulation time (tuning constant)
+        double timeScale = 60;  // try 60 first
 
-        // 🔥 Aggressive energy loss (fast collapse)
-        velocity = velocity.multiply(0.98);
+        double scaledDt = dt * timeScale;
 
-        // Update position
-        position = position.add(velocity);
+        velocity = velocity.add(acceleration.multiply(scaledDt));
 
-        // Store trail
+        double dampingFactor = Math.pow(0.98, scaledDt);
+        velocity = velocity.multiply(dampingFactor);
+
+        position = position.add(velocity.multiply(scaledDt));
+
         trail.add(position);
 
         if (trail.size() > MAX_TRAIL_LENGTH) {
             trail.remove(0);
         }
 
-        // Reset acceleration
         acceleration = new Vector2D(0, 0);
     }
 

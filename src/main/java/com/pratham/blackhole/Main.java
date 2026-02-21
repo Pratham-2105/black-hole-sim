@@ -29,11 +29,24 @@ public class Main extends Application {
         stage.show();
 
         AnimationTimer timer = new AnimationTimer() {
+
+            private long lastTime = 0;
+
             @Override
             public void handle(long now) {
 
-                // Update physics
-                simulation.update();
+                if (lastTime == 0) {
+                    lastTime = now;
+                    return;
+                }
+
+                // Convert nanoseconds to seconds
+                double dt = (now - lastTime) / 1_000_000_000.0;
+                lastTime = now;
+
+                System.out.println(dt);
+                // Update physics with delta time
+                simulation.update(dt);
 
                 // Clear previous frame
                 root.getChildren().clear();
@@ -50,7 +63,6 @@ public class Main extends Application {
                 // Draw particles + trails
                 for (Particle particle : simulation.getParticles()) {
 
-                    // Draw trail lines
                     for (int i = 1; i < particle.getTrail().size(); i++) {
                         Vector2D p1 = particle.getTrail().get(i - 1);
                         Vector2D p2 = particle.getTrail().get(i);
@@ -60,15 +72,13 @@ public class Main extends Application {
                                 p2.getX(), p2.getY()
                         );
 
-                        // Fade older segments
                         double opacity = i / (double) particle.getTrail().size();
                         line.setStroke(Color.CYAN);
-                        line.setOpacity(opacity * 0.6);
+                        line.setOpacity(opacity * 0.6 * particle.getOpacity());
 
                         root.getChildren().add(line);
                     }
 
-                    // Draw particle
                     Circle circle = new Circle(
                             particle.getPosition().getX(),
                             particle.getPosition().getY(),
@@ -76,7 +86,7 @@ public class Main extends Application {
                     );
                     circle.setFill(Color.WHITE);
                     circle.setOpacity(particle.getOpacity());
-                    circle.setOpacity(particle.getOpacity());
+
                     root.getChildren().add(circle);
                 }
             }

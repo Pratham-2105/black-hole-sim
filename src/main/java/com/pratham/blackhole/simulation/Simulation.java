@@ -60,7 +60,7 @@ public class Simulation {
         }
     }
 
-    public void update() {
+    public void update(double dt) {
 
         Iterator<Particle> iterator = particles.iterator();
 
@@ -70,7 +70,7 @@ public class Simulation {
 
             Vector2D force = blackHole.calculateForce(particle);
             particle.applyForce(force);
-            particle.update();
+            particle.update(dt);
 
             double distance = particle.getPosition()
                     .subtract(blackHole.getPosition())
@@ -82,7 +82,7 @@ public class Simulation {
 
             // Fade and remove
             if (particle.isCaptured()) {
-                particle.reduceOpacity(0.03);
+                particle.reduceOpacity(0.5 * dt * 60);
 
                 if (particle.getOpacity() <= 0) {
                     iterator.remove();
