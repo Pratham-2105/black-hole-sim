@@ -1,5 +1,10 @@
 package com.pratham.blackhole;
 
-public class Main {
+import com.pratham.blackhole.simulation.Simulation;
 
+public class Main {
+    public static void main(String[] args) {
+        Simulation simulation = new Simulation();
+        simulation.run();
+    }
 }
