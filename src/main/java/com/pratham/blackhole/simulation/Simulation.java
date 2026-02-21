@@ -15,6 +15,10 @@ public class Simulation {
 
     private static final int TARGET_PARTICLE_COUNT = 300;
 
+    private static final double INTERACTION_RADIUS = 15;
+    private static final double REPULSION_STRENGTH = 5;
+    private static final double TURBULENCE_STRENGTH = 0.2;
+
     public Simulation() {
         particles = new ArrayList<>();
 
@@ -90,14 +94,48 @@ public class Simulation {
 
     public void update(double dt) {
 
+        // --------- FIRST PASS: compute forces ---------
+        List<Vector2D> forces = new ArrayList<>(particles.size());
+
+        for (int i = 0; i < particles.size(); i++) {
+
+            Particle p1 = particles.get(i);
+
+            Vector2D totalForce = blackHole.calculateForce(p1);
+
+            // --- Local repulsion ---
+            for (int j = 0; j < particles.size(); j++) {
+                if (i == j) continue;
+
+                Particle p2 = particles.get(j);
+
+                Vector2D diff = p1.getPosition().subtract(p2.getPosition());
+                double distance = diff.magnitude();
+
+                if (distance > 0 && distance < INTERACTION_RADIUS) {
+                    Vector2D repulsion = diff.normalize()
+                            .multiply(REPULSION_STRENGTH / distance);
+                    totalForce = totalForce.add(repulsion);
+                }
+            }
+
+            // --- Micro turbulence ---
+            double noiseX = (Math.random() - 0.5) * TURBULENCE_STRENGTH;
+            double noiseY = (Math.random() - 0.5) * TURBULENCE_STRENGTH;
+            totalForce = totalForce.add(new Vector2D(noiseX, noiseY));
+
+            forces.add(totalForce);
+        }
+
+        // --------- SECOND PASS: apply + update + removal ---------
         Iterator<Particle> iterator = particles.iterator();
+        int index = 0;
 
         while (iterator.hasNext()) {
 
             Particle particle = iterator.next();
 
-            Vector2D force = blackHole.calculateForce(particle);
-            particle.applyForce(force);
+            particle.applyForce(forces.get(index));
             particle.update(dt);
 
             double distance = particle.getPosition()
@@ -108,7 +146,6 @@ public class Simulation {
                 particle.setCaptured(true);
             }
 
-            // Fade and remove
             if (particle.isCaptured()) {
                 particle.reduceOpacity(0.5 * dt * 60);
 
@@ -116,13 +153,15 @@ public class Simulation {
                     iterator.remove();
                 }
             }
+
+            index++;
         }
 
+        // --------- THIRD PASS: spawn ---------
         while (particles.size() < TARGET_PARTICLE_COUNT) {
             spawnParticle();
         }
     }
-
     public List<Particle> getParticles() {
         return particles;
     }
