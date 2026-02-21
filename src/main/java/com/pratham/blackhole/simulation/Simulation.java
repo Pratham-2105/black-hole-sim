@@ -5,6 +5,7 @@ import com.pratham.blackhole.physics.BlackHole;
 import com.pratham.blackhole.physics.Particle;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class Simulation {
@@ -60,12 +61,33 @@ public class Simulation {
     }
 
     public void update() {
-        for(Particle particle : particles) {
+
+        Iterator<Particle> iterator = particles.iterator();
+
+        while (iterator.hasNext()) {
+
+            Particle particle = iterator.next();
+
             Vector2D force = blackHole.calculateForce(particle);
-
             particle.applyForce(force);
-
             particle.update();
+
+            double distance = particle.getPosition()
+                    .subtract(blackHole.getPosition())
+                    .magnitude();
+
+            if (distance < blackHole.getEventHorizonRadius()) {
+                particle.setCaptured(true);
+            }
+
+            // Fade and remove
+            if (particle.isCaptured()) {
+                particle.reduceOpacity(0.03);
+
+                if (particle.getOpacity() <= 0) {
+                    iterator.remove();
+                }
+            }
         }
     }
 

@@ -10,6 +10,8 @@ public class BlackHole {
 
     private static final double G = 0.1;
 
+    private double eventHorizonRadius = 40;
+
     public BlackHole(Vector2D position, double mass) {
         this.position = position;
         this.mass = mass;
@@ -25,7 +27,9 @@ public class BlackHole {
 
         Vector2D normalized = direction.normalize();
 
-        double strength = (G * mass * particle.getMass()) / (distance * distance);
+        double softening = 25; // small constant
+        double strength = (G * mass * particle.getMass()) /
+                (distance * distance + softening);
 
         return normalized.multiply(strength);
     }
@@ -40,5 +44,9 @@ public class BlackHole {
 
     public static double getG() {
         return G;
+    }
+
+    public double getEventHorizonRadius() {
+        return eventHorizonRadius;
     }
 }

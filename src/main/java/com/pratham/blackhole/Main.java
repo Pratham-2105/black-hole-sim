@@ -75,6 +75,8 @@ public class Main extends Application {
                             3
                     );
                     circle.setFill(Color.WHITE);
+                    circle.setOpacity(particle.getOpacity());
+                    circle.setOpacity(particle.getOpacity());
                     root.getChildren().add(circle);
                 }
             }
