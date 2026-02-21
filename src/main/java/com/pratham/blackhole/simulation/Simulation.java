@@ -20,7 +20,7 @@ public class Simulation {
         );
 
         for (int i = 0; i < 100; i++) {
-            Vector2D force = blachHole.calculateForce(particle);
+            Vector2D force = blackHole.calculateForce(particle);
 
             particle.applyForce(force);
 
