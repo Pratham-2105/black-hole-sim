@@ -13,6 +13,10 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.stage.Stage;
 
+import javafx.scene.paint.RadialGradient;
+import javafx.scene.paint.Stop;
+import javafx.scene.paint.CycleMethod;
+
 public class Main extends Application {
 
     private Simulation simulation;
@@ -44,7 +48,6 @@ public class Main extends Application {
                 double dt = (now - lastTime) / 1_000_000_000.0;
                 lastTime = now;
 
-                System.out.println(dt);
                 // Update physics with delta time
                 simulation.update(dt);
 
@@ -52,13 +55,57 @@ public class Main extends Application {
                 root.getChildren().clear();
 
                 // Draw black hole
-                Circle blackHole = new Circle(
+
+                //Outer Blue Glow
+                Circle blueGlow = new Circle(
+                        simulation.getBlackHole().getPosition().getX(),
+                        simulation.getBlackHole().getPosition().getY(),
+                        80
+                );
+
+                RadialGradient blueGradient = new RadialGradient(
+                        0, 0,
+                        0.5, 0.5,
+                        0.5,
+                        true,
+                        CycleMethod.NO_CYCLE,
+                        new Stop(0, Color.rgb(30, 144, 255, 0.6)),   // bright center
+                        new Stop(1, Color.rgb(30, 144, 255, 0.0))    // transparent edge
+                );
+
+                blueGlow.setFill(blueGradient);
+                root.getChildren().add(blueGlow);
+
+
+                //Inner Orange Glow
+                Circle orangeGlow = new Circle(
+                        simulation.getBlackHole().getPosition().getX(),
+                        simulation.getBlackHole().getPosition().getY(),
+                        45
+                );
+
+                RadialGradient orangeGradient = new RadialGradient(
+                        0, 0,
+                        0.5, 0.5,
+                        0.5,
+                        true,
+                        CycleMethod.NO_CYCLE,
+                        new Stop(0, Color.rgb(255, 140, 0, 0.9)),  // hot center
+                        new Stop(1, Color.rgb(255, 69, 0, 0.0))    // fade outward
+                );
+
+                orangeGlow.setFill(orangeGradient);
+                root.getChildren().add(orangeGlow);
+
+
+                //Core Black Hole
+                Circle blackHoleCore = new Circle(
                         simulation.getBlackHole().getPosition().getX(),
                         simulation.getBlackHole().getPosition().getY(),
                         25
                 );
-                blackHole.setFill(Color.GRAY);
-                root.getChildren().add(blackHole);
+                blackHoleCore.setFill(Color.BLACK);
+                root.getChildren().add(blackHoleCore);
 
                 // Draw particles + trails
                 for (Particle particle : simulation.getParticles()) {
@@ -88,8 +135,12 @@ public class Main extends Application {
                     circle.setOpacity(particle.getOpacity());
 
                     root.getChildren().add(circle);
+
+                    double pulse = 1 + 0.05 * Math.sin(now * 0.000000002);
+                    orangeGlow.setRadius(45 * pulse);
                 }
             }
+
         };
 
         timer.start();
