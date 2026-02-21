@@ -26,6 +26,10 @@ public class Main extends Application {
 
         Group root = new Group();
 
+        Circle blackHoleCircle = new Circle(400, 300, 20, Color.DARKGRAY);
+
+        root.getChildren().add(blackHoleCircle);
+
         particleNodes = new ArrayList<>();
 
         for (Particle particle : simulation.getParticles()) {
